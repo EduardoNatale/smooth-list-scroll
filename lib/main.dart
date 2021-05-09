@@ -1,9 +1,7 @@
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
-import 'package:flutter/rendering.dart';
 import 'package:random_color/random_color.dart';
 import 'package:sprung/sprung.dart';
 
@@ -50,7 +48,7 @@ class Item {
   }) {
     color = RandomColor().randomColor(
       colorBrightness: ColorBrightness.light,
-      colorSaturation: ColorSaturation.mediumSaturation,
+      colorSaturation: ColorSaturation.highSaturation,
       colorHue: ColorHue.multiple(
         colorHues: [
           ColorHue.blue,
@@ -90,7 +88,10 @@ class _SmoothListScrollState extends State<SmoothListScroll>
     with SingleTickerProviderStateMixin {
   AnimationController _animationController;
   Animation<double> _animation;
+  Animation<double> _heightAnimation;
+
   double value = 0;
+  double heightValue = 0;
   int currentIndex = -1;
 
   @override
@@ -100,6 +101,7 @@ class _SmoothListScrollState extends State<SmoothListScroll>
     _animationController = AnimationController(vsync: this)
       ..addListener(() {
         setState(() {
+          heightValue = _heightAnimation.value;
           value = _animation.value;
         });
       });
@@ -109,20 +111,24 @@ class _SmoothListScrollState extends State<SmoothListScroll>
     _animation = _animationController.drive(
       Tween<double>(begin: value, end: 0),
     );
-
-    const spring = SpringDescription(
-      mass: 30,
-      stiffness: 1,
-      damping: 1,
+    _heightAnimation = _animationController.drive(
+      Tween<double>(begin: 15, end: 0),
     );
 
-    final simulation = SpringSimulation(spring, 0, 1, 5);
+    const spring = SpringDescription(
+      mass: 1,
+      stiffness: 100,
+      damping: 20,
+    );
+
+    final simulation = SpringSimulation(spring, 0, 1, -.5);
 
     _animationController.animateWith(simulation);
   }
 
   @override
   void dispose() {
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -143,6 +149,13 @@ class _SmoothListScrollState extends State<SmoothListScroll>
                 value = -30;
               else
                 value = 30;
+            }
+
+            if (heightValue <= 15) {
+              heightValue += (details.delta.dy * .1).abs();
+              setState(() {});
+            } else if (heightValue > 15) {
+              heightValue = 15;
             }
           },
           onPointerUp: (_) {
@@ -171,17 +184,15 @@ class _SmoothListScrollState extends State<SmoothListScroll>
                       ),
                       child: TweenAnimationBuilder(
                         tween: Tween<double>(
-                          begin: 48,
-                          end: (index == currentIndex) ? 60 : 48,
+                          begin: 150,
+                          end: (index == currentIndex) ? 200 : 150,
                         ),
                         curve: Sprung.underDamped,
                         duration: Duration(milliseconds: 300),
-                        builder: (_, padding, __) {
+                        builder: (_, height, __) {
                           return Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: padding,
-                            ),
+                            height: height + heightValue,
+                            padding: EdgeInsets.symmetric(horizontal: 16),
                             width: double.infinity,
                             alignment: Alignment.center,
                             child: Icon(
