@@ -122,14 +122,18 @@ class _SmoothPageState extends State<SmoothPage>
             _animationController.stop();
           },
           onPointerMove: (details) {
-            if (controlValue >= -30 && controlValue <= 30) {
-              controlValue += details.delta.dy * .3;
-              setState(() {});
-            } else if (controlValue < -30 || controlValue > 30) {
-              if (controlValue < 0)
-                controlValue = -30;
-              else
-                controlValue = 30;
+            if (_scrollController.position.pixels > 0 &&
+                _scrollController.position.pixels <
+                    _scrollController.position.maxScrollExtent) {
+              if (controlValue >= -30 && controlValue <= 30) {
+                controlValue += details.delta.dy * .3;
+                setState(() {});
+              } else if (controlValue < -30 || controlValue > 30) {
+                if (controlValue < 0)
+                  controlValue = -30;
+                else
+                  controlValue = 30;
+              }
             }
           },
           onPointerUp: (_) {
@@ -137,7 +141,7 @@ class _SmoothPageState extends State<SmoothPage>
           },
           child: SingleChildScrollView(
             controller: _scrollController,
-            physics: BouncingScrollPhysics(),
+            // physics: BouncingScrollPhysics(),
             child: _buildItems(),
           ),
         ),
